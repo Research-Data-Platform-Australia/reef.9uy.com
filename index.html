@@ -1,1 +1,249 @@
-<h1>Hello, World!</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coral Reef Data Explorer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-cyan-50">
+    <!-- Loading Screen -->
+    <div id="loading" class="flex items-center justify-center h-screen">
+        <div class="text-center">
+            <div class="text-blue-500 mb-4">Loading...</div>
+            <p class="text-gray-600">Fetching coral reef data...</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">🌊 Coral Reef Data Explorer</h1>
+                <p class="text-gray-600">Data from OBIS (Ocean Biodiversity Information System)</p>
+            </div>
+
+            <!-- Coral Type Selection -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Coral Type</h2>
+                <div class="flex gap-3" id="coral-type-buttons">
+                    <button data-order="Scleractinia" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-blue-500 bg-blue-50">
+                        <div class="font-semibold text-gray-800">Hard Corals</div>
+                        <div class="text-xs text-gray-600 mt-1">Reef-building stony corals</div>
+                    </button>
+                    <button data-order="Alcyonacea" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300">
+                        <div class="font-semibold text-gray-800">Soft Corals</div>
+                        <div class="text-xs text-gray-600 mt-1">Flexible octocorals</div>
+                    </button>
+                    <button data-order="Antipatharia" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300">
+                        <div class="font-semibold text-gray-800">Black Corals</div>
+                        <div class="text-xs text-gray-600 mt-1">Deep-sea corals</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Layers Panel -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Map Layers</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" id="layer-basemap" checked class="w-4 h-4 text-gray-600 rounded">
+                        <div>
+                            <div class="font-medium text-sm">Base Map</div>
+                            <div class="text-xs text-gray-500">Street map</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" id="layer-observations" checked class="w-4 h-4 text-blue-600 rounded">
+                        <div>
+                            <div class="font-medium text-sm">Observations</div>
+                            <div class="text-xs text-gray-500">Coral records</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" id="layer-reefs" class="w-4 h-4 text-green-600 rounded">
+                        <div>
+                            <div class="font-medium text-sm">Reef Boundaries</div>
+                            <div class="text-xs text-gray-500">Major reef systems</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" id="layer-mpas" class="w-4 h-4 text-blue-600 rounded">
+                        <div>
+                            <div class="font-medium text-sm">Protected Areas</div>
+                            <div class="text-xs text-gray-500">Marine parks</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" id="layer-temperature" class="w-4 h-4 text-red-600 rounded">
+                        <div>
+                            <div class="font-medium text-sm">Temperature</div>
+                            <div class="text-xs text-gray-500">Heat anomalies</div>
+                        </div>
+                    </label>
+                </div>
+                <div id="layer-legend" class="mt-4 pt-4 border-t hidden">
+                    <div class="text-sm font-medium text-gray-700 mb-2">Legend:</div>
+                    <div class="flex flex-wrap gap-4 text-xs" id="legend-items"></div>
+                </div>
+                <div id="reef-status" class="mt-4 pt-4 border-t hidden">
+                    <div class="text-sm font-medium text-gray-700 mb-2">Reef Layer Status:</div>
+                    <div class="text-xs text-gray-600" id="reef-debug-info"></div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Filters</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <input type="text" id="search-input" placeholder="Species, family, location..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Family (<span id="family-count">0</span>)</label>
+                        <select id="family-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Families</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Species</label>
+                        <select id="species-select" disabled class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">All Species</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="filter-summary" class="mt-4 hidden">
+                    <button id="clear-filters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                        Clear All Filters
+                    </button>
+                    <span class="ml-3 text-sm text-gray-600" id="filter-count"></span>
+                </div>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Timeline Animation</h2>
+                <div class="text-center mb-4">
+                    <div class="flex items-center justify-center gap-4">
+                        <div class="text-3xl font-bold text-gray-600" id="start-year-display">1900</div>
+                        <div class="text-2xl text-gray-400">→</div>
+                        <div class="text-5xl font-bold text-blue-600" id="end-year-display">2024</div>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1" id="year-range-text">Showing all observations</div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Year: <span id="start-year-label">1900</span></label>
+                    <input type="range" id="start-year-slider" min="1900" max="2024" value="1900" 
+                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Year: <span id="end-year-label">2024</span></label>
+                    <input type="range" id="end-year-slider" min="1900" max="2024" value="2024" 
+                        class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-xs text-gray-600 mt-1">
+                        <span id="min-year">1900</span>
+                        <span id="max-year">2024</span>
+                    </div>
+                </div>
+                <div class="mb-4 flex items-center justify-center">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="show-undated" checked class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">Include observations without dates (<span id="undated-count">0</span> records)</span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-center gap-4">
+                    <button id="reset-timeline" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                        🔄 Reset
+                    </button>
+                    <button id="play-pause" class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                        ▶️ Play
+                    </button>
+                    <select id="play-speed" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1000">1x</option>
+                        <option value="500" selected>2x</option>
+                        <option value="250">4x</option>
+                        <option value="100">10x</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm text-gray-600">Total Records</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stat-total">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm text-gray-600">Filtered / Total</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stat-filtered">0 / 0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm text-gray-600">Species</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stat-species">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm text-gray-600">Families</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stat-families">0</p>
+                </div>
+            </div>
+
+            <!-- Map and Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Geographic Distribution</h2>
+                    <div id="map" style="height: 500px; border-radius: 8px;"></div>
+                    <div class="flex gap-4 mt-4 text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: #3b82f6;"></div>
+                            <span class="text-gray-600">0-20m</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: #8b5cf6;"></div>
+                            <span class="text-gray-600">20-50m</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: #ec4899;"></div>
+                            <span class="text-gray-600">50-100m</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: #ef4444;"></div>
+                            <span class="text-gray-600">100m+</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Details</h2>
+                    <div id="details-panel" class="text-sm text-gray-500 italic">Click on a marker to see details</div>
+                </div>
+            </div>
+
+            <!-- Depth Distribution -->
+            <div class="mt-6 bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Depth Distribution</h2>
+                <div class="flex items-end gap-2 h-48" id="depth-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
