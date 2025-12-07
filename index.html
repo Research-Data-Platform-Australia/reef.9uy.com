@@ -34,27 +34,37 @@
 
             <!-- Coral Type Selection -->
             <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Coral Type</h2>
-                <div class="flex gap-3" id="coral-type-buttons">
-                    <button data-order="Scleractinia" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-blue-500 bg-blue-50">
-                        <div class="font-semibold text-gray-800">Hard Corals</div>
-                        <div class="text-xs text-gray-600 mt-1">Reef-building stony corals</div>
-                    </button>
-                    <button data-order="Alcyonacea" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300">
-                        <div class="font-semibold text-gray-800">Soft Corals</div>
-                        <div class="text-xs text-gray-600 mt-1">Flexible octocorals</div>
-                    </button>
-                    <button data-order="Antipatharia" class="coral-type-btn flex-1 p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300">
-                        <div class="font-semibold text-gray-800">Black Corals</div>
-                        <div class="text-xs text-gray-600 mt-1">Deep-sea corals</div>
-                    </button>
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Coral Types (select one or more)</h2>
+                <div class="flex gap-3">
+                    <label class="flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all border-blue-500 bg-blue-50">
+                        <input type="checkbox" id="coral-type-scleractinia" value="Scleractinia" checked class="mr-2">
+                        <div class="inline-block">
+                            <div class="font-semibold text-gray-800">Hard Corals</div>
+                            <div class="text-xs text-gray-600 mt-1">Reef-building stony corals</div>
+                        </div>
+                    </label>
+                    <label class="flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all border-gray-200 hover:border-blue-300">
+                        <input type="checkbox" id="coral-type-alcyonacea" value="Alcyonacea" class="mr-2">
+                        <div class="inline-block">
+                            <div class="font-semibold text-gray-800">Soft Corals</div>
+                            <div class="text-xs text-gray-600 mt-1">Flexible octocorals</div>
+                        </div>
+                    </label>
+                    <label class="flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all border-gray-200 hover:border-blue-300">
+                        <input type="checkbox" id="coral-type-antipatharia" value="Antipatharia" class="mr-2">
+                        <div class="inline-block">
+                            <div class="font-semibold text-gray-800">Black Corals</div>
+                            <div class="text-xs text-gray-600 mt-1">Deep-sea corals</div>
+                        </div>
+                    </label>
                 </div>
+                <div id="coral-type-status" class="mt-3 text-sm text-gray-600"></div>
             </div>
 
             <!-- Map Layers Panel -->
             <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Map Layers</h2>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                         <input type="checkbox" id="layer-basemap" checked class="w-4 h-4 text-gray-600 rounded">
                         <div>
@@ -74,13 +84,6 @@
                         <div>
                             <div class="font-medium text-sm">Reef Boundaries</div>
                             <div class="text-xs text-gray-500">Major reef systems</div>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="checkbox" id="layer-mpas" class="w-4 h-4 text-blue-600 rounded">
-                        <div>
-                            <div class="font-medium text-sm">Protected Areas</div>
-                            <div class="text-xs text-gray-500">Marine parks</div>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
